@@ -1,9 +1,9 @@
 import torch
-from model import CosmosTransformer # Assuming your model is here
+from model import MayaTransformer # Assuming your model is here
 from config import MayaConfig
 
 def audit_vram(config):
-    model = CosmosTransformer(config)
+    model = MayaTransformer(config)
     
     # 1. Parameter Count
     params = sum(p.numel() for p in model.parameters())
