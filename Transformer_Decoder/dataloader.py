@@ -11,7 +11,7 @@ class MayaStreamingDataset(IterableDataset):
         self.shuffle = shuffle
         
         # Get all chunk files (0-74)
-        self.files = sorted([os.path.join(data_dir, f) for f in os.listdir(data_dir) if f.endswith('.bin')])
+        self.files = sorted([os.path.join(data_dir, f) for f in os.listdir(data_dir) if f.endswith('.pt')])
         print("Data dir:", data_dir)
         print("Files found:", self.files)
         
@@ -23,7 +23,7 @@ class MayaStreamingDataset(IterableDataset):
         for file_path in self.files:
             print("Opening:", file_path)
             chunk = torch.load(file_path, weights_only=True)
-            data = chunk['tokens']                   
+            data = chunk                  
             print("Token count:", len(data))
 
             num_tokens = len(data)

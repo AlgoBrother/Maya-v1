@@ -56,8 +56,8 @@ class Trainer:
                 except StopIteration:
                     data_iter = iter(self.train_loader)
                     x, y = next(data_iter)
-
-                x, y = x.to(self.device, non_blocking=True)  # 👈 non_blocking for async transfer
+                    
+                x = x.to(self.device, non_blocking=True) 
                 y = y.to(self.device, non_blocking=True)
 
                 with torch.amp.autocast(device_type="cuda", dtype=torch.bfloat16):
