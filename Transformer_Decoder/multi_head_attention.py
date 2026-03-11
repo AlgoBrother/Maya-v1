@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 from rms_norm import RMSNormalisation
+from config import MayaConfig
 from activation_function import SwiGLU
 
 class RoPE(nn.Module):
@@ -31,14 +32,14 @@ def apply_rope(q, k, cos, sin):
 # where B is batch size, T is sequence length, n_head is number of attention heads, and head_dim is the dimension of each head (embed_dim // num_heads)
 
 class CausalSelfAttention(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config: MayaConfig):
         super().__init__()
-        self.n_head = config.n_head
+        self.n_head = config.n_heads
         self.n_embd = config.n_embd
         # Key, Query, Value in one batch
         self.c_attn = nn.Linear(config.n_embd, 3 * config.n_embd)
         self.c_proj = nn.Linear(config.n_embd, config.n_embd)
-        self.head_dim = config.n_embd // config.n_head
+        self.head_dim = config.n_embd // config.n_heads
 
     def forward(self, x, cos, sin):
         B, T, C = x.size()
@@ -60,7 +61,7 @@ class CausalSelfAttention(nn.Module):
         return self.c_proj(y)
 
 class Block(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config: MayaConfig):
         super().__init__()
         self.ln_1 = RMSNormalisation(config.n_embd)
         self.attn = CausalSelfAttention(config)

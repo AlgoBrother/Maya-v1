@@ -9,6 +9,7 @@ class MayaConfig:
     n_embd: int = 768
     dropout: float = 0.0
     bias: bool = False
+    batch_size: int = 4
     
     grad_accum_steps: int = 8 
     # what is grad_accum_steps?

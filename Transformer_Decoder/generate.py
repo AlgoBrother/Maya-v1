@@ -1,8 +1,6 @@
 import torch
 import torch.nn.functional as F
 
-
-
 @torch.no_grad()
 def generate(model, idx, max_new_tokens, temperature=0.8, top_k=40):
     model.eval()

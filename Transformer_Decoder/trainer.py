@@ -1,15 +1,16 @@
 import os
 import torch
 import time
+from config import MayaConfig
 
 class Trainer:
-    def __init__(self, model, optimizer, scheduler, train_loader, config):
+    def __init__(self, model, optimizer, scheduler, train_loader, config: MayaConfig):
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model.to(self.device)
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.train_loader = train_loader
         self.config = config
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.scaler = torch.amp.GradScaler() # For Mixed Precision (bf16/fp16)
         self.step = 0
 
@@ -43,7 +44,9 @@ class Trainer:
         self.model.train()
         data_iter = iter(self.train_loader)
 
+
         while True:
+            t0 = time.time()
             self.optimizer.zero_grad(set_to_none=True)
             accum_loss = 0.0
 
@@ -67,17 +70,22 @@ class Trainer:
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
             self.optimizer.step()
             self.scheduler.step()
-            self.optimizer.zero_grad(set_to_none=True)
 
             torch.cuda.synchronize()
-            self.step += 1
-            
             t1 = time.time()
+            self.step += 1
 
             # 3. Logging & Checkpointing
             if self.step % 10 == 0:
-                dt = (t1 - t0) * 1000 # milliseconds
-                print(f"Step {self.step} | Loss: {accum_loss:.4f} | Time: {dt:.2f}ms")
+                dt = (t1 - t0)
+                tokens_per_sec = (self.config.batch_size * self.config.block_size * 
+                                self.config.grad_accum_steps) / dt
+                print(f"Step {self.step} | Loss: {accum_loss:.4f} | "
+                    f"Time: {dt*1000:.2f}ms | Tok/s: {tokens_per_sec:,.0f}")
 
             if self.step % 500 == 0:
                 self.save_checkpoint(f"checkpoints/ckpt_step_{self.step}.pt")
+                
+            if accum_loss < self.best_loss:
+                self.best_loss = accum_loss
+                self.save_checkpoint("checkpoints/best.pt")

@@ -14,7 +14,7 @@ class MayaTransformer(nn.Module):
 
         self.transformer = nn.ModuleDict(dict(
             wte = nn.Embedding(config.vocab_size, config.n_embd),
-            h = nn.ModuleList([Block(config) for _ in range(config.n_layer)]),
+            h = nn.ModuleList([Block(config) for _ in range(config.n_layers)]),
             ln_f = RMSNormalisation(config.n_embd),
         ))
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
@@ -25,10 +25,18 @@ class MayaTransformer(nn.Module):
         # Initialize weights
         self.apply(self._init_weights)
         
+        self.rope = RoPE(config.n_embd // config.n_heads) # head_dim = n_embd // n_heads 
+        # what is head_dim?
+        # head_dim is the dimension of each attention head in a multi-head attention mechanism.
+        # It is calculated as the total embedding dimension (n_embd) divided by the number 
+        # of attention heads (n_heads).
+        # This allows the model to split the embedding into multiple heads for parallel attention computations,
+        # which can capture different aspects of the input data.
+        
         # Apply special scaled init to output projections (see GPT-2 paper)
         for pn, p in self.named_parameters():
             if pn.endswith('c_proj.weight') or pn.endswith('w2.weight'):
-                torch.nn.init.normal_(p, mean=0.0, std=0.02/math.sqrt(2 * config.n_layer))
+                torch.nn.init.normal_(p, mean=0.0, std=0.02/math.sqrt(2 * config.n_layers))
 
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
@@ -44,11 +52,11 @@ class MayaTransformer(nn.Module):
         
         # Token embeddings
         x = self.transformer.wte(idx)
+        cos, sin = self.rope(x)  # Precompute RoPE embeddings for the sequence length
         
         # Pass through transformer blocks
-        # (Assuming your Block handles RoPE internally)
         for block in self.transformer.h:
-            x = block(x)
+            x = block(x, cos, sin)  # Passing RoPE embeddings to each block
             
         x = self.transformer.ln_f(x)
 
