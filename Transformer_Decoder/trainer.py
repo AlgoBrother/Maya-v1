@@ -11,10 +11,12 @@ class Trainer:
         self.scheduler = scheduler
         self.train_loader = train_loader
         self.config = config
-        self.scaler = torch.amp.GradScaler() # For Mixed Precision (bf16/fp16)
+        self.scaler = torch.amp.GradScaler()
         self.step = 0
+        self.best_loss = float('inf')
 
     def save_checkpoint(self, path):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         checkpoint = {
             'model_state_dict': self.model.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
@@ -27,12 +29,6 @@ class Trainer:
 
     def load_checkpoint(self, path):
         checkpoint = torch.load(path, map_location=self.device, weights_only=False)
-        # what does weights_only=False do?
-        # It loads the entire checkpoint including optimizer and scheduler states, 
-        # which is crucial for resuming training without losing momentum or learning rate schedule.
-        # If it were True, it would only load the model weights, which might be useful for inference
-        # but not for training resumption.
-        
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
@@ -43,7 +39,6 @@ class Trainer:
         self.model = torch.compile(self.model)
         self.model.train()
         data_iter = iter(self.train_loader)
-
 
         while True:
             t0 = time.time()
@@ -56,15 +51,15 @@ class Trainer:
                 except StopIteration:
                     data_iter = iter(self.train_loader)
                     x, y = next(data_iter)
-                    
-                x = x.to(self.device, non_blocking=True) 
+
+                x = x.to(self.device, non_blocking=True)
                 y = y.to(self.device, non_blocking=True)
 
                 with torch.amp.autocast(device_type="cuda", dtype=torch.bfloat16):
                     logits, loss = self.model(x, y)
                     loss = loss / self.config.grad_accum_steps
 
-                loss.backward()  # 👈 no scaler needed for BF16
+                loss.backward()
                 accum_loss += loss.item()
 
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
@@ -75,17 +70,20 @@ class Trainer:
             t1 = time.time()
             self.step += 1
 
-            # 3. Logging & Checkpointing
+            # Logging
             if self.step % 10 == 0:
                 dt = (t1 - t0)
-                tokens_per_sec = (self.config.batch_size * self.config.block_size * 
-                                self.config.grad_accum_steps) / dt
+                tokens_per_sec = (self.config.batch_size * self.config.block_size *
+                                  self.config.grad_accum_steps) / dt
                 print(f"Step {self.step} | Loss: {accum_loss:.4f} | "
-                    f"Time: {dt*1000:.2f}ms | Tok/s: {tokens_per_sec:,.0f}")
+                      f"Time: {dt*1000:.2f}ms | Tok/s: {tokens_per_sec:,.0f}")
 
+            # Regular checkpoint every 500 steps
             if self.step % 500 == 0:
-                self.save_checkpoint(f"checkpoints/ckpt_step_{self.step}.pt")
-                
+                self.save_checkpoint(f"/mnt/d/Maya_checkpoints/ckpt_step_{self.step}.pt")
+
+            # Best checkpoint - only after step 100 to avoid spamming during initial loss drop
             if accum_loss < self.best_loss:
                 self.best_loss = accum_loss
-                self.save_checkpoint("checkpoints/best.pt")
+                if self.step > 100:
+                    self.save_checkpoint("/mnt/d/Maya_checkpoints/best.pt")
