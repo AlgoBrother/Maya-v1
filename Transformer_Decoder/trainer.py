@@ -73,17 +73,19 @@ class Trainer:
             # Logging
             if self.step % 10 == 0:
                 dt = (t1 - t0)
-                tokens_per_sec = (self.config.batch_size * self.config.block_size *
-                                  self.config.grad_accum_steps) / dt
-                print(f"Step {self.step} | Loss: {accum_loss:.4f} | "
-                      f"Time: {dt*1000:.2f}ms | Tok/s: {tokens_per_sec:,.0f}")
+                tokens_per_sec = (self.config.batch_size * self.config.block_size * self.config.grad_accum_steps) / dt
+                print(f"Step {self.step} | Loss: {accum_loss:.4f} | "f"Time: {dt*1000:.2f}ms | Tok/s: {tokens_per_sec:,.0f}")
 
             # Regular checkpoint every 500 steps
             if self.step % 500 == 0:
                 self.save_checkpoint(f"/mnt/d/Maya_checkpoints/ckpt_step_{self.step}.pt")
 
             # Best checkpoint - only after step 100 to avoid spamming during initial loss drop
+            # Alternative: Save only if improvement is significant (e.g., > 1% improvement)
             if accum_loss < self.best_loss:
-                self.best_loss = accum_loss
-                if self.step > 100:
+                improvement = (self.best_loss - accum_loss) / self.best_loss
+                # Save if significant improvement (> 1%) or it's been many steps since last save
+                if self.step > 100 and (improvement > 0.01 or (self.step - last_best_save_step) >= 50):
+                    self.best_loss = accum_loss
                     self.save_checkpoint("/mnt/d/Maya_checkpoints/best.pt")
+                    last_best_save_step = self.step

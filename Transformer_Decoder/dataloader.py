@@ -43,4 +43,5 @@ class MayaStreamingDataset(IterableDataset):
 def get_dataloader(data_dir, config: MayaConfig):
     dataset = MayaStreamingDataset(data_dir, config.block_size)
     # pin_memory=True is critical for fast GPU transfer on your 4070
-    return DataLoader(dataset, batch_size=config.batch_size, pin_memory=True, num_workers=1)
+    return DataLoader(dataset, batch_size=config.batch_size, pin_memory=True,
+                    num_workers=4, prefetch_factor=2, persistent_workers=True)
