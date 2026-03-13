@@ -81,7 +81,7 @@ class Trainer:
                 self.save_checkpoint(f"/mnt/d/Maya_checkpoints/ckpt_step_{self.step}.pt")
 
             # Best checkpoint - only after step 100 to avoid spamming during initial loss drop
-            # Alternative: Save only if improvement is significant (e.g., > 1% improvement)
+            # Save only if improvement is significant (e.g., > 1% improvement)
             if accum_loss < self.best_loss:
                 improvement = (self.best_loss - accum_loss) / self.best_loss
                 # Save if significant improvement (> 1%) or it's been many steps since last save
