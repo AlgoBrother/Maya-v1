@@ -51,7 +51,7 @@ def main():
 
     # ── 4. Scheduler: Linear Warmup + Cosine Annealing ────────────────────────
     warmup_steps  = 100
-    total_steps   = 10_000  # adjust to your dataset size
+    total_steps   = 192000  # adjust to your dataset size
 
     def lr_lambda(step):
         if step < warmup_steps:
@@ -76,14 +76,22 @@ def main():
     )
 
     # ── 7. Resume or start fresh ───────────────────────────────────────────────
+    import glob
+    CHECKPOINT_DIR = "/mnt/d/Maya_checkpoints"
+    checkpoints = sorted(glob.glob(f"{CHECKPOINT_DIR}/ckpt_step_*.pt"))
+
     if args.resume:
         print(f"Resuming from {args.resume}")
         trainer.load_checkpoint(args.resume)
+    elif checkpoints:
+        latest = checkpoints[-1]
+        print(f"Auto-resuming from {latest}")
+        trainer.load_checkpoint(latest)
     else:
         print("Starting fresh training run")
 
     # ── 8. Train ───────────────────────────────────────────────────────────────
-    trainer.train()
+    trainer.train(total_steps=192000)
 
 if __name__ == "__main__":
     main()
