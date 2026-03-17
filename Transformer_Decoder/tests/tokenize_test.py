@@ -4,7 +4,7 @@ import mayatok_bpe as bpe
 
 import mayatok_bpe as bpe
 
-my_tokenizer = bpe.PyBPETokenizer.load("bpe_tokenizer_py.json")
+my_tokenizer = bpe.PyBPETokenizer.load(r"C:\Users\Ashwin Rajhans\Maya-v1\Transformer_Decoder\bpe_tokenizer_py.json")
 test = "Hello, world!"
 tokens = my_tokenizer.encode(test)
 print(tokens)
