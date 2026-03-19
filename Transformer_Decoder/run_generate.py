@@ -44,7 +44,7 @@
 #     print(f"\nPrompt: {prompt}")
 #     print(f"Output: {decoded}")
 #     print("-" * 60)
-   
+
 # ----------------- USER INPUT VERSION ----------------- 
 import torch
 import mayatok_bpe as bpe
