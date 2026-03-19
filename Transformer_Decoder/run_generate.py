@@ -75,7 +75,7 @@ print("Maya loaded ✅")
 # ── Tokenizer ──────────────────────────────────────────────
 tokenizer = bpe.PyBPETokenizer.load("C:\\Users\\Ashwin Rajhans\\Maya-v1\\Transformer_Decoder\\bpe_tokenizer_py.json")
 
-# OPTIONAL (if you have it)
+# OPTIONAL [Get EOS token ID if needed for generation stopping criteria]*
 eos_token_id = getattr(tokenizer, "eos_token_id", None)
 
 # ── Chat loop ──────────────────────────────────────────────
