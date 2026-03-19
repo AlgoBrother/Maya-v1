@@ -76,7 +76,7 @@ print("Maya loaded ✅")
 tokenizer = bpe.PyBPETokenizer.load("C:\\Users\\Ashwin Rajhans\\Maya-v1\\Transformer_Decoder\\bpe_tokenizer_py.json")
 
 # OPTIONAL [Get EOS token ID if needed for generation stopping criteria]*
-eos_token_id = getattr(tokenizer, "eos_token_id", None)
+eos_token_id = 289  # Hardcoded EOS token ID for Maya (adjust if your tokenizer uses a different ID)
 
 # ── Chat loop ──────────────────────────────────────────────
 while True:
@@ -85,7 +85,7 @@ while True:
     if user_input.lower() == "exit":
         break
 
-    tokens = tokenizer.encode(user_input)
+    tokens = [288] + tokenizer.encode(user_input)
 
     idx = torch.tensor(tokens, dtype=torch.long).unsqueeze(0).to(device)
     idx = idx[:, -config.block_size:]
@@ -93,9 +93,9 @@ while True:
     with torch.no_grad():
         out = generate(model, idx, max_new_tokens=100)
 
-    # 🔴 Only decode generated part
+    # Only decode generated part
     generated_tokens = out[0][len(tokens):]
     decoded = tokenizer.decode(generated_tokens.tolist())
 
     print(f"\nMaya: {decoded}")
-    print("-" * 100)
+    print("-" * 500)

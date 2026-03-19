@@ -34,8 +34,13 @@ def generate(model, idx, max_new_tokens, temperature=0.8, top_k=40, top_p=0.9, r
             
             sorted_logits[sorted_indices_to_remove] = -float('Inf')
             logits = torch.scatter(logits, 1, sorted_indices, sorted_logits)
+        
 
         probs = F.softmax(logits, dim=-1)
         idx_next = torch.multinomial(probs, num_samples=1)
+        # eos_token_id = getattr(model.config, "eos_token_id", None) [AUTOMATIC EOS_TOKEN_ID HANDLING, MAYATOK DOESNT HAVE ANY EOS_TOKEN_ID DEFINED, SO THIS WILL BE NONE, THE NEXT LINE HARDCODES THE TOKEN ID]
+        eos_token_id = 289  # Hardcoded EOS token ID for Maya (adjust if your tokenizer uses a different ID)
+        if idx_next.item() == eos_token_id:
+            break
         idx = torch.cat((idx, idx_next), dim=1)
     return idx
