@@ -36,7 +36,7 @@ def audit_vram(config):
     if total_est / 1024 > 7.0: # Leaving 1GB for Windows/System
         print("⚠️ DANGER: You are close to the 8GB limit. Consider lowering n_embd.")
     else:
-        print("✅ SAFE: This should run smoothly on your 4070.")
+        print("✅ SAFE: This should run smoothly on a 8GB VRAM.")
 
 if __name__ == "__main__":
     audit_vram(MayaConfig())
