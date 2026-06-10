@@ -43,6 +43,10 @@ Build an efficient, small-scale language model that:
 * Initial Transformer implementation
 * Rapid prototyping
 * PyTorch experimentation
+<<<<<<< HEAD
+=======
+
+>>>>>>> 54ec08bc0c9b88b4dff1c399b7396a63a9e0f7f1
 ---
 
 ## Tokenizer
@@ -99,21 +103,19 @@ Objective:
 * Transformer architecture (Python implementation)
 * Masking implementation (Python)
 * DataLoader prototype (Python)
+* V1 Training Completed
 
 ### In Progress
 
-* Full Rust rewrite of Transformer architecture
 * Rust-based DataLoader
-* Training loop completion
-* Conversion from `.pt` to `.bin`
-* Memory-mapped dataset loading
+* Training loop completion (V2)
+
 
 ### Pending
 
-* Full training run
+* V2(340M) training run
 * Perplexity benchmarking
-* Hyperparameter tuning
-* Performance optimization
+* Math Solving integration
 
 ---
 
@@ -122,7 +124,7 @@ Objective:
 Train a small language model under 100M parameters on limited hardware while maintaining:
 
 * Stable training
-* Efficient memory usage
+* Efficient memory usage (This will e tested on my 8GB VRAM NVIDIA CARD)
 * Practical inference performance
 * Competitive perplexity (< 20)
 
@@ -130,7 +132,6 @@ Train a small language model under 100M parameters on limited hardware while mai
 
 ## Long-Term Direction
 
-* Fully Rust-based training stack
 * Optimized tokenizer pipeline
 * Efficient small-scale foundation model
 * Independent local AI system
@@ -144,10 +145,3 @@ Most research scales upward with more compute. MAYA scales downward.
 The focus is architectural efficiency over brute-force hardware scaling.
 
 ---
-
-If you want, I can also:
-
-* Make a more investor-facing version
-* Make a more research-paper-style version
-* Add architectural diagrams section
-* Add benchmarking roadmap section
