@@ -43,12 +43,6 @@ Build an efficient, small-scale language model that:
 * Initial Transformer implementation
 * Rapid prototyping
 * PyTorch experimentation
-
-### C++
-
-* Testing and experimentation
-* Used where rapid low-level control is preferred
-
 ---
 
 ## Tokenizer

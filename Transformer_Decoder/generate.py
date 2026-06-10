@@ -4,6 +4,7 @@ import torch.nn.functional as F
 @torch.no_grad()
 def generate(model, idx, max_new_tokens, temperature=0.8, top_k=40, top_p=0.9, repetition_penalty=1.1):
     model.eval()
+
     for _ in range(max_new_tokens):
         # Crop context if it exceeds model limits
         idx_cond = idx if idx.size(1) <= model.config.block_size else idx[:, -model.config.block_size:]
@@ -38,7 +39,7 @@ def generate(model, idx, max_new_tokens, temperature=0.8, top_k=40, top_p=0.9, r
 
         probs = F.softmax(logits, dim=-1)
         idx_next = torch.multinomial(probs, num_samples=1)
-        # eos_token_id = getattr(model.config, "eos_token_id", None) [AUTOMATIC EOS_TOKEN_ID HANDLING, MAYATOK DOESNT HAVE ANY EOS_TOKEN_ID DEFINED, SO THIS WILL BE NONE, THE NEXT LINE HARDCODES THE TOKEN ID]
+        # eos_token_id = getattr(model.config, "eos_token_id", None) [AUTOMATIC EOS_TOKEN_ID HANDLING, MAYATOK_VOCAB (old vocab) DOESNT HAVE ANY EOS_TOKEN_ID DEFINED, SO THIS WILL BE NONE, THE NEXT LINE HARDCODES THE TOKEN ID]
         eos_token_id = 289  # Hardcoded EOS token ID for Maya (adjust if your tokenizer uses a different ID)
         if idx_next.item() == eos_token_id:
             break

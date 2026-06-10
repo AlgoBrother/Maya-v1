@@ -1,6 +1,12 @@
 import torch
-from model import MayaTransformer # Assuming your model is here
-from config import MayaConfig
+import sys
+from pathlib import Path
+
+project_root = Path(__file__).resolve().parents[2]
+sys.path.append(str(project_root))
+
+from Transformer_Decoder.model import MayaTransformer
+from Transformer_Decoder.config import MayaConfig
 
 def audit_vram(config):
     model = MayaTransformer(config)

@@ -1,53 +1,21 @@
-# import torch
-# import mayatok_bpe as bpe
-# from generate import generate
-# from model import MayaTransformer
-# from config import MayaConfig
+import re
 
-
-# # ── Load model ──────────────────────────────────────────────────────────────
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# config = MayaConfig()
-# model = MayaTransformer(config)
-
-# checkpoint = torch.load(r"D:\Maya_checkpoints\best.pt", 
-#                         map_location=device, weights_only=False)
-# state_dict = checkpoint['model_state_dict']
-# unwrapped = {k.replace('_orig_mod.', ''): v for k, v in state_dict.items()}
-# model.load_state_dict(unwrapped)
-# model.to(device)
-# model.eval()
-# print("Maya loaded ✅")
-
-# # ── Tokenizer ────────────────────────────────────────────────────────────────
-# tokenizer = bpe.PyBPETokenizer.load("bpe_tokenizer_py.json")
-# # ── Generate ─────────────────────────────────────────────────────────────────
-# prompts = [
-#     "The capital of France is",
-#     "Once upon a time",
-#     "Machine learning is",
-#     "2 + 2 = 4, but 2 + 3 =",
-#     "The largest planet is",
-#     "Python is a programming",
-#     "The meaning of life is",
-#     "Compare minimum spanning tree algorithm: Prim's vs Kruskal's"
-# ]
-
-# for prompt in prompts:
-#     tokens = tokenizer.encode(prompt)
-#     idx = torch.tensor(tokens, dtype=torch.long).unsqueeze(0).to(device)
+def safe_decode(tokenizer, token_ids, space_token_id=292):
+    parts = []
+    for tid in token_ids:
+        if tid == space_token_id:
+            parts.append(' ')
+        else:
+            tok = tokenizer.decode([tid])
+            parts.append(tok)
     
-#     out = generate(model, idx, max_new_tokens=100)
-#     decoded = tokenizer.decode(out[0].tolist())
-    
-#     print(f"\nPrompt: {prompt}")
-#     print(f"Output: {decoded}")
-#     print("-" * 60)
-
+    text = "".join(parts)
+    text = re.sub(r' {2,}', ' ', text)
+    text = re.sub(r'\s+([.,!?;:])', r'\1', text)
+    return text.strip()
 # ----------------- USER INPUT VERSION ----------------- 
 import torch
-import mayatok_bpe as bpe
+import mayatok as bpe
 from generate import generate
 from model import MayaTransformer
 from config import MayaConfig
@@ -73,10 +41,9 @@ model.eval()
 print("Maya loaded ✅")
 
 # ── Tokenizer ──────────────────────────────────────────────
-tokenizer = bpe.PyBPETokenizer.load("C:\\Users\\Ashwin Rajhans\\Maya-v1\\Transformer_Decoder\\bpe_tokenizer_py.json")
+tokenizer = bpe.PyBPETokenizer.load(r"../../mayatok_vocab.json")
 
-# OPTIONAL [Get EOS token ID if needed for generation stopping criteria]*
-eos_token_id = 289  # Hardcoded EOS token ID for Maya (adjust if your tokenizer uses a different ID)
+eos_token_id = 289  # Hardcoded EOS token ID for Maya [I am fixing this in V2]
 
 # ── Chat loop ──────────────────────────────────────────────
 while True:
@@ -93,9 +60,20 @@ while True:
     with torch.no_grad():
         out = generate(model, idx, max_new_tokens=100)
 
-    # Only decode generated part
-    generated_tokens = out[0][len(tokens):]
-    decoded = tokenizer.decode(generated_tokens.tolist())
 
+    # Only decode generated part
+    generated_tokens = out[0][len(tokens):].tolist()
+    
+    # # DEBUG BLOCK [COMMENTED OUT]
+    # print("Raw tokens:", generated_tokens[:30])
+    # print("Unique tokens:", sorted(set(generated_tokens[:30])))
+    # for tid in generated_tokens[:30]:
+    #     print(tid, repr(tokenizer.decode([tid])))
+
+    # Strip EOS and any control tokens
+    SKIP_TOKENS = {289, 288, 2451}  # EOS, BOS — add others after checking above
+    clean_tokens = [t for t in generated_tokens if t not in SKIP_TOKENS]
+
+    decoded = safe_decode(tokenizer, clean_tokens)
     print(f"\nMaya: {decoded}")
-    print("-" * 500)
+    print("-" * 50)

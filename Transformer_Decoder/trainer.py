@@ -41,16 +41,31 @@ class Trainer:
             os.remove(old_ckpt)
             print(f"--- Old checkpoint removed: {old_ckpt} ---")
 
+    # def load_checkpoint(self, path):
+    #     checkpoint = torch.load(path, map_location=self.device, weights_only=False)
+    #     state_dict = checkpoint['model_state_dict']
+    #     unwrapped = {k.replace('_orig_mod.', ''): v for k, v in state_dict.items()}
+        
+    #     self.model.load_state_dict(unwrapped)
+    #     self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    #     self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+    #     self.step = checkpoint['step']
+    #     self.best_loss = checkpoint.get('best_loss', float('inf'))  # restore best loss
+    #     print(f"--- Resuming from step {self.step} | Best loss: {self.best_loss:.4f} ---")
     def load_checkpoint(self, path):
         checkpoint = torch.load(path, map_location=self.device, weights_only=False)
         state_dict = checkpoint['model_state_dict']
         unwrapped = {k.replace('_orig_mod.', ''): v for k, v in state_dict.items()}
-        
         self.model.load_state_dict(unwrapped)
-        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+
+        # Guard against None optimizer state (re-embedding checkpoint)
+        if checkpoint.get('optimizer_state_dict') is not None:
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        if checkpoint.get('scheduler_state_dict') is not None:
+            self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+
         self.step = checkpoint['step']
-        self.best_loss = checkpoint.get('best_loss', float('inf'))  # restore best loss
+        self.best_loss = checkpoint.get('best_loss', float('inf'))
         print(f"--- Resuming from step {self.step} | Best loss: {self.best_loss:.4f} ---")
 
     def train(self, total_steps=192000):

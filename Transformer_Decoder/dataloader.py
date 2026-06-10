@@ -3,7 +3,7 @@ import random
 import numpy as np
 import torch
 from torch.utils.data import IterableDataset, DataLoader
-from config import MayaConfig
+from .config import MayaConfig
 
 class MayaStreamingDataset(IterableDataset):
     def __init__(self, data_dir, block_size, shuffle=True):
@@ -42,6 +42,6 @@ class MayaStreamingDataset(IterableDataset):
 
 def get_dataloader(data_dir, config: MayaConfig):
     dataset = MayaStreamingDataset(data_dir, config.block_size)
-    # pin_memory=True is critical for fast GPU transfer on your 4070
+    # pin_memory=True is critical for fast GPU transfer on 4070
     return DataLoader(dataset, batch_size=config.batch_size, pin_memory=True,
                     num_workers=4, prefetch_factor=2, persistent_workers=True)

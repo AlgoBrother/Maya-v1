@@ -1,4 +1,5 @@
-tests/
-__pycache__/
+Transformer_Decoder/tests/
+Transformer_Decoder/__pycache__/
 *.pyc
 bpe_tokenizer_py.json
+trial/
